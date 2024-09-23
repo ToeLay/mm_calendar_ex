@@ -1,0 +1,2 @@
+defmodule MmDate do
+end
