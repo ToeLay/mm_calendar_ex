@@ -1,40 +1,61 @@
 defmodule MmDate do
-  defstruct [:year, :month, :day]
+  defstruct [
+    :year,
+    :year_type,
+    :year_length,
+    :month,
+    :month_length,
+    :day,
+    :fornight_day,
+    :moon_phase,
+    :week_day
+  ]
 
   alias Watat.WatatStrategy
 
   def today() do
     date_time = NaiveDateTime.local_now()
-
     jdn = get_jdn(date_time)
+    calculate_date(jdn)
+  end
 
+  def for(date_time) do
+    jdn = get_jdn(date_time)
+    calculate_date(jdn)
+  end
+
+  def for(year, month, day) do
+    date_time = NaiveDateTime.new(year, month, day, 12, 0, 0)
+    jdn = get_jdn(date_time)
+    calculate_date(jdn)
+  end
+
+  def from_jdn(jdn) do
+    calculate_date(jdn)
+  end
+
+  defp calculate_date(jdn) do
     year = get_year(jdn)
-
     year_type = get_year_type(year)
-
-    IO.puts("year : #{year}")
-    IO.puts("year type : #{year_type}")
-
+    year_length = get_year_length(year_type)
     month = get_month(jdn)
-    IO.puts("month : #{month}")
-
-    month_name = MmMonth.to_month_name(month)
-    IO.puts("month name : #{month_name}")
-
     day = get_day(jdn)
-    IO.puts("day : #{day}")
-
     month_length = get_month_length(jdn)
-    IO.puts("month length : #{month_length}")
-
     moon_phase = get_moon_phase(jdn)
-    IO.puts("moon phase : #{moon_phase}")
-
     fornight_day = get_fornight_day(jdn)
-    IO.puts("fornight day : #{fornight_day}")
-
     week_day = get_week_day(jdn)
-    IO.puts("week day : #{week_day}")
+
+    %MmDate{
+      year: year,
+      year_type: year_type,
+      year_length: year_length,
+      month: month,
+      month_length: month_length,
+      day: day,
+      fornight_day: fornight_day,
+      moon_phase: moon_phase,
+      week_day: week_day
+    }
   end
 
   @spec get_jdn(Calendar.naive_datetime(), atom()) :: float()

@@ -51,16 +51,19 @@ defmodule MmCalendarTest do
       Enum.each(line, fn row ->
         [jd, year_type, year, month, day] = row |> Enum.map(&String.to_integer/1)
 
-        calculated_year = MmDate.get_year(jd)
+        %MmDate{
+          year: calculated_year,
+          year_type: calculated_year_type,
+          month: calculated_month,
+          day: calculated_day
+        } = MmDate.from_jdn(jd)
+
         assert calculated_year == year
 
-        calculated_year_type = MmDate.get_year_type(year)
         assert YearType.to_year_type_index(calculated_year_type) == year_type
 
-        calculated_month = MmDate.get_month(jd) |> MmMonth.to_month_index()
-        assert calculated_month == month
+        assert MmMonth.to_month_index(calculated_month) == month
 
-        calculated_day = MmDate.get_day(jd)
         assert calculated_day == day
       end)
     end)
