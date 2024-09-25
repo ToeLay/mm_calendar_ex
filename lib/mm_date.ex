@@ -8,7 +8,10 @@ defmodule MmDate do
     :day,
     :fornight_day,
     :moon_phase,
-    :week_day
+    :week_day,
+    :hour,
+    :minute,
+    :second
   ]
 
   alias Watat.WatatStrategy
@@ -19,13 +22,13 @@ defmodule MmDate do
     calculate_date(jdn)
   end
 
-  def for(date_time) do
+  def for(%NaiveDateTime{} = date_time) do
     jdn = get_jdn(date_time)
     calculate_date(jdn)
   end
 
   def for(year, month, day) do
-    date_time = NaiveDateTime.new(year, month, day, 12, 0, 0)
+    date_time = NaiveDateTime.new(year, month, day, 0, 0, 0)
     jdn = get_jdn(date_time)
     calculate_date(jdn)
   end
@@ -34,7 +37,18 @@ defmodule MmDate do
     calculate_date(jdn)
   end
 
+  defp calculate_date(%NaiveDateTime{} = date_time) do
+    jdn = get_jdn(date_time)
+
+    date = calculate_date(jdn)
+    %{date | hour: date_time.hour, minute: date_time.minute, second: date_time.second}
+  end
+
   defp calculate_date(jdn) do
+    jf = trunc(jdn + 0.5)
+    time_fraction = jdn + 0.5 - jf
+    %{hour: hour, minute: minute, second: second} = get_time(time_fraction)
+
     year = get_year(jdn)
     year_type = get_year_type(year)
     year_length = get_year_length(year_type)
@@ -54,8 +68,24 @@ defmodule MmDate do
       day: day,
       fornight_day: fornight_day,
       moon_phase: moon_phase,
-      week_day: week_day
+      week_day: week_day,
+      hour: hour,
+      minute: minute,
+      second: second
     }
+  end
+
+  defp get_time(jf) do
+    jf = jf * 24
+    hour = trunc(jf)
+
+    jf = (jf - hour) * 60
+    minute = trunc(jf)
+
+    jf = (jf - minute) * 60
+    second = trunc(jf)
+
+    %{hour: hour, minute: minute, second: second}
   end
 
   @spec get_jdn(Calendar.naive_datetime(), atom()) :: float()
@@ -161,8 +191,8 @@ defmodule MmDate do
   end
 
   def get_month_length(jdn) do
-    month = get_month(jdn) |> MmMonth.to_month_index()
-    month_length = 30 - rem(month, 2)
+    month = get_month(jdn)
+    month_length = 30 - rem(MmMonth.to_month_index(month), 2)
 
     if month == :nayon and get_year_type(get_year(jdn)) == :big_watat,
       do: month_length + 1,
@@ -264,9 +294,10 @@ defmodule MmDate do
   end
 
   defp get_days_from_new_year(jdn) do
+    jdn = round(jdn)
     year = get_year(jdn)
 
-    total_days = trunc(jdn - get_first_day_of_tagu(year) + 1)
+    total_days = jdn - get_first_day_of_tagu(year) + 1
     year_type = get_year_type(year)
     year_length = get_year_length(year_type)
 
