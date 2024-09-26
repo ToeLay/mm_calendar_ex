@@ -35,75 +35,75 @@ defmodule Date.MmMonth do
   #   late_kason: 14
   # ]
 
-  def to_month_name(month_index) when month_index < 15 do
+  def name(month_index) when month_index < 15 do
     Enum.at(@months_names, month_index)
   end
 
-  def to_month_name(_) do
+  def name(_) do
     :invalid_index
   end
 
-  def to_month_index(:first_waso) do
+  def index(:first_waso) do
     0
   end
 
-  def to_month_index(:tagu) do
+  def index(:tagu) do
     1
   end
 
-  def to_month_index(:kason) do
+  def index(:kason) do
     2
   end
 
-  def to_month_index(:nayon) do
+  def index(:nayon) do
     3
   end
 
-  def to_month_index(:waso) do
+  def index(:waso) do
     4
   end
 
-  def to_month_index(:wagung) do
+  def index(:wagung) do
     5
   end
 
-  def to_month_index(:tawthalin) do
+  def index(:tawthalin) do
     6
   end
 
-  def to_month_index(:thadingyut) do
+  def index(:thadingyut) do
     7
   end
 
-  def to_month_index(:tazaungmon) do
+  def index(:tazaungmon) do
     8
   end
 
-  def to_month_index(:nadaw) do
+  def index(:nadaw) do
     9
   end
 
-  def to_month_index(:pyatho) do
+  def index(:pyatho) do
     10
   end
 
-  def to_month_index(:tabodwe) do
+  def index(:tabodwe) do
     11
   end
 
-  def to_month_index(:tabaung) do
+  def index(:tabaung) do
     12
   end
 
-  def to_month_index(:late_tagu) do
+  def index(:late_tagu) do
     13
   end
 
-  def to_month_index(:late_kason) do
+  def index(:late_kason) do
     14
   end
 
-  def to_month_index(_) do
+  def index(_) do
     -1
   end
 end

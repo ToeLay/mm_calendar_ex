@@ -4,7 +4,7 @@ defmodule Thingyan do
   def for_en_year(year) do
     # Thingyan likely falls in April
     # so check two months ahead
-    {:ok, date_time} = NaiveDateTime.new(year, 6, 1, 0, 0, 0)
+    {:ok, date_time} = NaiveDateTime.new(year, 5, 1, 0, 0, 0)
 
     %MmDate{year: year} = MmDate.for(date_time)
     calculate_thingyan(year)

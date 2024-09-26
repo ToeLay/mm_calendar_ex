@@ -15,7 +15,7 @@ defmodule MmDate do
   ]
 
   alias Watat.WatatStrategy
-  alias Date.{MmMonth, MoonPhase, MmWeekDay, YearType}
+  alias Date.{MmMonth, YearType}
 
   def today() do
     date_time = NaiveDateTime.local_now()
@@ -52,7 +52,7 @@ defmodule MmDate do
 
     year = get_year(jdn)
     year_type = get_year_type(year)
-    year_length = get_year_length(year_type)
+    year_length = year_type |> YearType.name() |> get_year_length()
     month = get_month(jdn)
     day = get_day(jdn)
     month_length = get_month_length(jdn)
@@ -120,13 +120,11 @@ defmodule MmDate do
     # ဒါကြောင့် ပုံသေနည်းအမှန်ကတော့ အောက်ပါအတိုင်းဖြစ်ပါတယ်။
     # မြန်မာနှစ် = (မြန်မာနှစ်ဆန်းချိန်(ဂျူလီယန်ရက်စွဲ) - မြန်မာနှစ် သုညနှစ်ရဲ့ အစကိန်းသေ(ဂျူလီယန်ရက်စွဲ) - ၀.၅) / နှစ်တစ်နှစ်ရဲ့ကြာချိန်
 
-    days_from_zero_year =
-      jdn
-      |> round()
-      |> Kernel.-(Constants.zero_year_jdn())
-      |> Kernel.-(0.5)
-
-    (days_from_zero_year / Constants.solar_year())
+    jdn
+    |> round()
+    |> Kernel.-(Constants.zero_year_jdn())
+    |> Kernel.-(0.5)
+    |> Kernel./(Constants.solar_year())
     |> trunc()
   end
 
@@ -135,14 +133,13 @@ defmodule MmDate do
     nearest_watat_info = get_nearnest_watat_info(year)
 
     unless watat_info.is_watat do
-      :common
+      0
     else
       (watat_info.second_waso_full_moon_day - nearest_watat_info.second_waso_full_moon_day)
       |> Kernel.rem(354)
       |> div(31)
       |> trunc()
       |> Kernel.+(1)
-      |> YearType.to_year_type_name()
     end
   end
 
@@ -169,12 +166,14 @@ defmodule MmDate do
 
     year = get_year(jdn)
     total_days = trunc(jdn - get_first_day_of_tagu(year) + 1)
-    year_type = get_year_type(year)
-    year_length = get_year_length(year_type)
 
-    month = if total_days > year_length, do: month + 12, else: month
+    year_length =
+      year
+      |> get_year_type()
+      |> YearType.name()
+      |> get_year_length()
 
-    MmMonth.to_month_name(month)
+    if total_days > year_length, do: month + 12, else: month
   end
 
   def get_day(jdn) do
@@ -185,17 +184,22 @@ defmodule MmDate do
     total_days = get_days_from_new_year(jdn)
     day = total_days - trunc(29.544 * month - 29.26)
 
-    year = get_year(jdn)
-    year_type = get_year_type(year)
+    year_type = get_year(jdn) |> get_year_type() |> YearType.name()
     day = day - if year_type == :big_watat, do: e, else: 0
     day + if year_type == :common, do: f * 30, else: 0
   end
 
   def get_month_length(jdn) do
     month = get_month(jdn)
-    month_length = 30 - rem(MmMonth.to_month_index(month), 2)
+    month_length = 30 - rem(month, 2)
 
-    if month == :nayon and get_year_type(get_year(jdn)) == :big_watat,
+    year_type =
+      jdn
+      |> get_year()
+      |> get_year_type()
+      |> YearType.name()
+
+    if MmMonth.name(month) == :nayon and year_type == :big_watat,
       do: month_length + 1,
       else: month_length
   end
@@ -203,8 +207,7 @@ defmodule MmDate do
   def get_moon_phase(jdn) do
     day = get_day(jdn)
 
-    (trunc((day + 1) / 16) + trunc(day / 16) + trunc(day / get_month_length(jdn)))
-    |> MoonPhase.to_moon_phase_name()
+    trunc((day + 1) / 16) + trunc(day / 16) + trunc(day / get_month_length(jdn))
   end
 
   def get_fornight_day(jdn) do
@@ -213,7 +216,7 @@ defmodule MmDate do
   end
 
   def get_week_day(jdn) do
-    (trunc(jdn) + 2) |> rem(7) |> MmWeekDay.to_day_name()
+    (trunc(jdn) + 2) |> rem(7)
   end
 
   defp get_julian_day(year, month, day, :gregorian) do
@@ -282,12 +285,15 @@ defmodule MmDate do
   end
 
   defp get_raw_month(jdn) do
-    year = get_year(jdn)
-
     total_days = get_days_from_new_year(jdn)
     day_threshold = trunc((total_days + 423) / 512)
 
-    year_type = get_year_type(year)
+    year_type =
+      jdn
+      |> get_year()
+      |> get_year_type()
+      |> YearType.name()
+
     total_days = total_days - if year_type == :big_watat, do: day_threshold, else: 0
     total_days = total_days + if year_type == :common, do: day_threshold * 30, else: 0
 
@@ -299,8 +305,12 @@ defmodule MmDate do
     year = get_year(jdn)
 
     total_days = jdn - get_first_day_of_tagu(year) + 1
-    year_type = get_year_type(year)
-    year_length = get_year_length(year_type)
+
+    year_length =
+      year
+      |> get_year_type()
+      |> YearType.name()
+      |> get_year_length()
 
     if total_days > year_length, do: total_days - year_length, else: total_days
   end

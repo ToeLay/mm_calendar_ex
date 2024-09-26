@@ -1,5 +1,5 @@
 defmodule MmAstro do
-  alias Date.{MmMonth, MmWeekDay}
+  alias Date.MmWeekDay
   alias Astro.{DragonHeadDirection, Mahabote, Nakhat}
 
   def is_sabbath_eve?(%MmDate{day: day, month_length: month_length}) do
@@ -11,34 +11,29 @@ defmodule MmAstro do
   end
 
   def is_yatyaza?(%MmDate{month: month, week_day: week_day}) do
-    m1 =
-      month
-      |> MmMonth.to_month_index()
-      |> rem(4)
+    m1 = rem(month, 4)
 
     wd1 = trunc(m1 / 2) + 4
     wd2 = (1 - trunc(m1 / 2) + rem(m1, 2)) * (1 + 2 * rem(m1, 2))
-    MmWeekDay.to_day_index(week_day) in [wd1, wd2]
+    week_day in [wd1, wd2]
   end
 
   def is_pyathada?(%MmDate{month: month, week_day: week_day}) do
-    m1 = month |> MmMonth.to_month_index() |> rem(4)
+    m1 = rem(month, 4)
 
     # if m1 == 0 and week_day == 4:
     #     return True # afternoon pyathada
 
     wda = [1, 3, 3, 0, 2, 1, 2]
 
-    week_index = week_day |> MmWeekDay.to_day_index()
-    m1 == Enum.at(wda, week_index)
+    m1 == Enum.at(wda, week_day)
   end
 
   def get_dragon_head_direction(%MmDate{month: month}) do
     # first waso is considered as waso
-    month = if month == :first_waso, do: :waso, else: month
+    month = if month == 0, do: 4, else: month
 
     month
-    |> MmMonth.to_month_index()
     |> rem(12)
     |> div(3)
     |> trunc()
@@ -47,7 +42,7 @@ defmodule MmAstro do
 
   def get_mahabote(%MmDate{year: year, week_day: week_day}) do
     year
-    |> Kernel.-(week_day |> MmWeekDay.to_day_index())
+    |> Kernel.-(week_day)
     |> rem(7)
     |> Mahabote.name()
   end
@@ -59,17 +54,14 @@ defmodule MmAstro do
   end
 
   def is_thama_nyo?(%MmDate{month: month, week_day: week_day}) do
-    month_index = MmMonth.to_month_index(month)
-    week_day_index = MmWeekDay.to_day_index(week_day)
-
-    month_type = trunc(month_index / 13)
+    month_type = trunc(month / 13)
     # to 1-12 with month type
-    month_index = rem(month_index, 13) + month_type
+    month = rem(month, 13) + month_type
 
     # first waso is considered waso
-    month_index = if month_index <= 0, do: 4, else: month_index
+    month = if month <= 0, do: 4, else: month
 
-    m1 = month_index - 1 - trunc(month_index / 9)
+    m1 = month - 1 - trunc(month / 9)
 
     wd1 =
       (m1 * 2)
@@ -77,7 +69,7 @@ defmodule MmAstro do
       |> rem(7)
 
     wd2 =
-      week_day_index
+      week_day
       |> Kernel.+(7)
       |> Kernel.-(wd1)
       |> rem(7)
@@ -87,33 +79,29 @@ defmodule MmAstro do
 
   def is_thama_phyu?(%MmDate{fornight_day: fornight_day, week_day: week_day}) do
     wda = [[1, 0], [2, 1], [6, 0], [6, 0], [5, 0], [6, 3], [7, 3]]
-    week_day_index = MmWeekDay.to_day_index(week_day)
 
-    if fornight_day in Enum.at(wda, week_day_index) do
+    if fornight_day in Enum.at(wda, week_day) do
       true
     else
-      fornight_day == 4 and week_day == :thursday
+      fornight_day == 4 and week_day |> MmWeekDay.name() == :thursday
     end
   end
 
   def is_amyeittasote?(%MmDate{fornight_day: fornight_day, week_day: week_day}) do
     wda = [5, 8, 3, 7, 2, 4, 1]
-    week_day_index = MmWeekDay.to_day_index(week_day)
 
-    fornight_day == Enum.at(wda, week_day_index)
+    fornight_day == Enum.at(wda, week_day)
   end
 
   def is_warameittu_gyi?(%MmDate{fornight_day: fornight_day, week_day: week_day}) do
     wda = [7, 1, 4, 8, 9, 6, 3]
-    week_day_index = MmWeekDay.to_day_index(week_day)
 
-    fornight_day == Enum.at(wda, week_day_index)
+    fornight_day == Enum.at(wda, week_day)
   end
 
   def is_warameittu_nge?(%MmDate{fornight_day: fornight_day, week_day: week_day}) do
     index =
       week_day
-      |> MmWeekDay.to_day_index()
       |> Kernel.+(6)
       |> rem(7)
 
@@ -122,56 +110,53 @@ defmodule MmAstro do
 
   def is_yat_pote?(%MmDate{fornight_day: fornight_day, week_day: week_day}) do
     wda = [8, 1, 4, 6, 9, 8, 7]
-    week_day_index = MmWeekDay.to_day_index(week_day)
 
-    fornight_day == Enum.at(wda, week_day_index)
+    fornight_day == Enum.at(wda, week_day)
   end
 
   def is_naga_por?(%MmDate{day: day, week_day: week_day}) do
     wda = [[26, 17], [21, 19], [2, 1], [10, 0], [18, 9], [2, 0], [21, 0]]
-    week_day_index = MmWeekDay.to_day_index(week_day)
 
-    if day in Enum.at(wda, week_day_index) do
+    if day in Enum.at(wda, week_day) do
       true
     else
-      (day == 2 and week_day == :sunday) or (day in [12, 4, 18] and week_day == :monday)
+      week_day_name = MmWeekDay.name(week_day)
+
+      (day == 2 and week_day_name == :sunday) or (day in [12, 4, 18] and week_day_name == :monday)
     end
   end
 
   def is_yat_yotema?(%MmDate{month: month, fornight_day: fornight_day}) do
-    month_index = month |> MmMonth.to_month_index()
-    month_type = trunc(month_index / 13)
+    month_type = trunc(month / 13)
     # to 1-12 with month type
-    month_index = rem(month_index, 13) + month_type
+    month = rem(month, 13) + month_type
 
-    month_index = if month_index <= 0, do: 4, else: month_index
+    month = if month <= 0, do: 4, else: month
 
-    m1 = if rem(month_index, 2) == 0, do: rem(month_index + 9, 12), else: month_index
+    m1 = if rem(month, 2) == 0, do: rem(month + 9, 12), else: month
     m1 = rem(m1 + 4, 12) + 1
 
     fornight_day == m1
   end
 
   def is_maha_yat_kyan?(%MmDate{month: month, fornight_day: fornight_day}) do
-    month = if month == :first_waso, do: :waso, else: month
-    month_index = MmMonth.to_month_index(month)
+    month = if month == 0, do: 4, else: month
 
-    m1 = trunc(rem(month_index, 12) / 2) + 4
+    m1 = trunc(rem(month, 12) / 2) + 4
     m1 = rem(m1, 6) + 1
 
     fornight_day == m1
   end
 
   def is_shan_yat?(%MmDate{month: month, fornight_day: fornight_day}) do
-    month_index = MmMonth.to_month_index(month)
-    month_type = trunc(month_index / 13)
+    month_type = trunc(month / 13)
     # to 1-12 with month type
-    month_index = rem(month_index, 13) + month_type
+    month = rem(month, 13) + month_type
 
-    month_index = if month_index <= 0, do: 4, else: month_index
+    month = if month <= 0, do: 4, else: month
 
     sya = [8, 8, 2, 2, 9, 3, 3, 5, 1, 4, 7, 4]
 
-    fornight_day == Enum.at(sya, month_index - 1)
+    fornight_day == Enum.at(sya, month - 1)
   end
 end

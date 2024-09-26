@@ -2,7 +2,6 @@ defmodule MmCalendarTest do
   use ExUnit.Case
   doctest MmCalendar
 
-  alias Date.{MmMonth, YearType}
   alias Astro.{DragonHeadDirection, Mahabote, Nakhat}
 
   setup_all do
@@ -71,9 +70,9 @@ defmodule MmCalendarTest do
 
         assert calculated_year == year
 
-        assert YearType.to_year_type_index(calculated_year_type) == year_type
+        assert calculated_year_type == year_type
 
-        assert MmMonth.to_month_index(calculated_month) == month
+        assert calculated_month == month
 
         assert calculated_day == day
       end)
