@@ -1,4 +1,4 @@
-defmodule MmMonth do
+defmodule Date.MmMonth do
   @months_names [
     :first_waso,
     :tagu,

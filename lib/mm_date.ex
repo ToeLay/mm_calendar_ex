@@ -15,6 +15,7 @@ defmodule MmDate do
   ]
 
   alias Watat.WatatStrategy
+  alias Date.{MmMonth, MoonPhase, MmWeekDay, YearType}
 
   def today() do
     date_time = NaiveDateTime.local_now()

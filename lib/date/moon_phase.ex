@@ -1,4 +1,4 @@
-defmodule MoonPhase do
+defmodule Date.MoonPhase do
   @moon_phases [:waxing, :full_moon, :waning, :new_moon]
 
   def to_moon_phase_name(index) when index >= 0 and index <= 3 do

@@ -2,6 +2,9 @@ defmodule MmCalendarTest do
   use ExUnit.Case
   doctest MmCalendar
 
+  alias Date.{MmMonth, YearType}
+  alias Astro.{DragonHeadDirection, Mahabote, Nakhat}
+
   setup_all do
     base_file_path = "priv/mmdate/"
 
@@ -115,7 +118,7 @@ defmodule MmCalendarTest do
         nagahle,
         mahabote,
         nakhat,
-        yearName
+        _yearName
       ] = line |> Enum.map(&String.to_integer/1)
 
       date = MmDate.from_jdn(jd)
@@ -130,6 +133,45 @@ defmodule MmCalendarTest do
 
       is_pyathada = MmAstro.is_pyathada?(date)
       assert is_pyathada == (pyathada == 1)
+
+      head_direction = MmAstro.get_dragon_head_direction(date)
+      assert nagahle == DragonHeadDirection.index(head_direction)
+
+      mahabote_index = MmAstro.get_mahabote(date)
+      assert mahabote == Mahabote.index(mahabote_index)
+
+      nakhat_index = MmAstro.get_nakhat(date)
+      assert nakhat == Nakhat.index(nakhat_index)
+
+      is_thama_nyo = MmAstro.is_thama_nyo?(date)
+      assert is_thama_nyo == to_bool(thamanyo)
+
+      is_thama_phyu = MmAstro.is_thama_phyu?(date)
+      assert is_thama_phyu == to_bool(thamaphyu)
+
+      is_amyeittasote = MmAstro.is_amyeittasote?(date)
+      assert is_amyeittasote == to_bool(amyeittasote)
+
+      is_warameittu_gyi = MmAstro.is_warameittu_gyi?(date)
+      assert is_warameittu_gyi == to_bool(warameittugyi)
+
+      is_warameittu_nge = MmAstro.is_warameittu_nge?(date)
+      assert is_warameittu_nge == to_bool(warameittunge)
+
+      is_yat_pote = MmAstro.is_yat_pote?(date)
+      assert is_yat_pote == to_bool(yatpote)
+
+      is_naga_por = MmAstro.is_naga_por?(date)
+      assert is_naga_por == to_bool(nagapor)
+
+      is_yat_yotema = MmAstro.is_yat_yotema?(date)
+      assert is_yat_yotema == to_bool(yatyotema)
+
+      is_maha_yat_kyan = MmAstro.is_maha_yat_kyan?(date)
+      assert is_maha_yat_kyan == to_bool(mahayatkyan)
+
+      is_shan_yat = MmAstro.is_shan_yat?(date)
+      assert is_shan_yat == to_bool(shanyat)
     end)
   end
 

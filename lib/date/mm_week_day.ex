@@ -1,4 +1,4 @@
-defmodule MmWeekDay do
+defmodule Date.MmWeekDay do
   @week_days [:saturday, :sunday, :monday, :tuesday, :wednesday, :thursday, :friday]
 
   def to_day_name(index) when index >= 0 and index <= 6 do

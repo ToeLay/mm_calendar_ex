@@ -1,4 +1,4 @@
-defmodule YearType do
+defmodule Date.YearType do
   @year_types [:common, :little_watat, :big_watat]
 
   def to_year_type_name(index) when is_integer(index) and index >= 0 and index <= 2 do
