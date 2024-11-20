@@ -1,31 +1,36 @@
-defmodule Date.MoonPhase do
+defmodule MmCalendar.Date.MoonPhase do
+  alias MmCalendar.Language
+  alias MmCalendar.Language.{NameTranslations, Translator}
+
   @moon_phases [:waxing, :full_moon, :waning, :new_moon]
 
-  def name(index) when index >= 0 and index <= 3 do
-    Enum.at(@moon_phases, index)
+  defstruct [
+    :index,
+    :name,
+    :translations
+  ]
+
+  def new(index) when is_integer(index) and index >= 0 and index <= 3 do
+    name = Enum.at(@moon_phases, index)
+    create(index, name)
   end
 
-  def name(_) do
-    :invalid_index
+  def new(name) when is_atom(name) and name in @moon_phases do
+    index = Enum.find_index(@moon_phases, fn el_name -> el_name == name end)
+    create(index, name)
   end
 
-  def index(:waxing) do
-    0
-  end
-
-  def index(:full_moon) do
-    1
-  end
-
-  def index(:waning) do
-    2
-  end
-
-  def index(:new_moon) do
-    3
-  end
-
-  def index(_) do
-    -1
+  defp create(index, name) do
+    %__MODULE__{
+      index: index,
+      name: name,
+      translations: %NameTranslations{
+        english: Translator.translate(name, Language.english()),
+        myanmar: Translator.translate(name, Language.myanmar()),
+        mon: Translator.translate(name, Language.mon()),
+        tai: Translator.translate(name, Language.tai()),
+        karen: Translator.translate(name, Language.karen())
+      }
+    }
   end
 end

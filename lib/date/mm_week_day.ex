@@ -1,43 +1,36 @@
-defmodule Date.MmWeekDay do
+defmodule MmCalendar.Date.MmWeekDay do
+  alias MmCalendar.Language
+  alias MmCalendar.Language.{NameTranslations, Translator}
+
   @week_days [:saturday, :sunday, :monday, :tuesday, :wednesday, :thursday, :friday]
 
-  def name(index) when index >= 0 and index <= 6 do
-    Enum.at(@week_days, index)
+  defstruct [
+    :index,
+    :name,
+    :translations
+  ]
+
+  def new(index) when is_integer(index) and index >= 0 and index <= 6 do
+    name = Enum.at(@week_days, index)
+    create(index, name)
   end
 
-  def name(_) do
-    :invalid_index
+  def new(name) when is_atom(name) and name in @week_days do
+    index = Enum.find_index(@week_days, fn el_name -> el_name == name end)
+    create(index, name)
   end
 
-  def index(:saturday) do
-    0
-  end
-
-  def index(:sunday) do
-    1
-  end
-
-  def index(:monday) do
-    2
-  end
-
-  def index(:tuesday) do
-    3
-  end
-
-  def index(:wednesday) do
-    4
-  end
-
-  def index(:thursday) do
-    5
-  end
-
-  def index(:friday) do
-    6
-  end
-
-  def index(_) do
-    -1
+  defp create(index, name) do
+    %__MODULE__{
+      index: index,
+      name: name,
+      translations: %NameTranslations{
+        english: Translator.translate(name, Language.english()),
+        myanmar: Translator.translate(name, Language.myanmar()),
+        mon: Translator.translate(name, Language.mon()),
+        tai: Translator.translate(name, Language.tai()),
+        karen: Translator.translate(name, Language.karen())
+      }
+    }
   end
 end

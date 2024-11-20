@@ -1,10 +1,11 @@
-defmodule MmDate do
+defmodule MmCalendar.MmDate do
   @doc """
   Module for Myanmar Date.
   """
 
   defstruct [
     :year,
+    :sasana_year,
     :year_type,
     :year_length,
     :month,
@@ -20,6 +21,7 @@ defmodule MmDate do
 
   @type t :: %__MODULE__{
           year: integer(),
+          sasana_year: integer(),
           year_type: 0..2,
           year_length: pos_integer(),
           month: 0..14,
@@ -33,8 +35,9 @@ defmodule MmDate do
           second: 0..59
         }
 
-  alias Watat.WatatStrategy
-  alias Date.{MmMonth, YearType}
+  alias MmCalendar.Watat.WatatStrategy
+  alias MmCalendar.Constants
+  alias MmCalendar.Date.{MmMonth, YearType, MmWeekDay, MoonPhase}
 
   @doc """
   Get Myanmar date for today.
@@ -60,7 +63,7 @@ defmodule MmDate do
   """
   @spec for(non_neg_integer, 1..12, 1..31) :: %__MODULE__{}
   def for(year, month, day) do
-    date_time = NaiveDateTime.new(year, month, day, 0, 0, 0)
+    {:ok, date_time} = NaiveDateTime.new(year, month, day, 12, 0, 0)
     jdn = get_jdn(date_time)
     calculate_date(jdn)
   end
@@ -92,16 +95,18 @@ defmodule MmDate do
 
     year = get_year(jdn)
     year_type = get_year_type(year)
-    year_length = year_type |> YearType.name() |> get_year_length()
+    year_length = get_year_length(year_type.name)
     month = get_month(jdn)
     day = get_day(jdn)
     month_length = get_month_length(jdn)
     moon_phase = get_moon_phase(jdn)
     fornight_day = get_fornight_day(jdn)
     week_day = get_week_day(jdn)
+    sasana_year = get_sasana_year(year, month, day)
 
-    %MmDate{
+    %__MODULE__{
       year: year,
+      sasana_year: sasana_year,
       year_type: year_type,
       year_length: year_length,
       month: month,
@@ -117,7 +122,7 @@ defmodule MmDate do
   end
 
   @spec get_time(float) :: %{hour: 0..23, minute: 0..59, second: 0..59}
-  defp get_time(jf) do
+  def get_time(jf) do
     # Calculate hour, minute, second from julian time fraction
 
     jf = jf * 24
@@ -173,7 +178,7 @@ defmodule MmDate do
     |> trunc()
   end
 
-  @spec get_year_type(integer) :: 0..2
+  @spec get_year_type(integer) :: %YearType{}
   # [0 = common, 1 = litte watat, 2 = big watat]
   defp get_year_type(year) do
     # မြန်မာနှစ်တနှစ် မှာ လထပ်ရင် ဝါထပ်နှစ်လို့ခေါ်ပြီး၊ ဝါထပ်နှစ်မှာပဲ ရက်ထပ်လို့ရပါတယ်။
@@ -191,13 +196,15 @@ defmodule MmDate do
     nearest_watat_info = get_nearnest_watat_info(year)
 
     unless watat_info.is_watat do
-      0
+      # common
+      YearType.new(0)
     else
       (watat_info.second_waso_full_moon_day - nearest_watat_info.second_waso_full_moon_day)
       |> Kernel.rem(354)
       |> div(31)
       |> trunc()
       |> Kernel.+(1)
+      |> YearType.new()
     end
   end
 
@@ -219,7 +226,7 @@ defmodule MmDate do
     385
   end
 
-  @spec get_month(float) :: 0..14
+  @spec get_month(float) :: %MmMonth{}
   defp get_month(jdn) do
     month = get_raw_month(jdn)
     e = trunc((month + 12) / 16)
@@ -230,13 +237,15 @@ defmodule MmDate do
     year = get_year(jdn)
     total_days = trunc(jdn - get_first_day_of_tagu(year) + 1)
 
-    year_length =
-      year
-      |> get_year_type()
-      |> YearType.name()
-      |> get_year_length()
+    year_type = get_year_type(year)
+    year_length = get_year_length(year_type.name)
 
-    if total_days > year_length, do: month + 12, else: month
+    month_index =
+      if total_days > year_length,
+        do: month + 12,
+        else: month
+
+    MmMonth.new(month_index)
   end
 
   @spec get_day(float) :: 0..30
@@ -251,9 +260,9 @@ defmodule MmDate do
     total_days = get_days_from_new_year(jdn)
     day = total_days - trunc(29.544 * month - 29.26)
 
-    year_type = get_year(jdn) |> get_year_type() |> YearType.name()
-    day = day - if year_type == :big_watat, do: e, else: 0
-    day + if year_type == :common, do: f * 30, else: 0
+    year_type = get_year(jdn) |> get_year_type()
+    day = day - if year_type.name == :big_watat, do: e, else: 0
+    day + if year_type.name == :common, do: f * 30, else: 0
   end
 
   @spec get_month_length(float) :: 29 | 30
@@ -262,21 +271,20 @@ defmodule MmDate do
     # ဒါကြောင့် လနံပါတ်ကို ၂ နဲ့စား အကြွင်းကို ၃၀ ထဲကနှုတ်လိုက်ရင် လရဲ့ ရက်အရေအတွက်ရပါပြီ
 
     month = get_month(jdn)
-    month_length = 30 - rem(month, 2)
+    month_length = 30 - rem(month.index, 2)
 
     year_type =
       jdn
       |> get_year()
       |> get_year_type()
-      |> YearType.name()
 
     # ဝါကြီးထပ်နှစ် ရဲ့ နယုန်လ ဖြစ်ရင်တော့ ၁ ရက် ပေါင်းပေးဖို့ လိုပါတယ်။
-    if MmMonth.name(month) == :nayon and year_type == :big_watat,
+    if month.name == :nayon and year_type.name == :big_watat,
       do: month_length + 1,
       else: month_length
   end
 
-  @spec get_moon_phase(float) :: 0..3
+  @spec get_moon_phase(float) :: %MoonPhase{}
   defp get_moon_phase(jdn) do
     # လတစ်လ မှာ ၁ ရက်ကနေ ၁၄ ရက်ထိကို လဆန်းရက်တွေ လို့ခေါ်ပြီး ၁၅ ရက် ဆိုပါက လပြည့်နေ့ ဖြစ်ပါတယ်။
     # ၁၅ ရက်ကျော်ရင် ၁၅ ပြန်နုတ်ပေးပြီး လဆုတ် ဒါမှမဟုတ် လပြည့်ကျော် လို့ခေါ်ပါတယ်။
@@ -284,7 +292,8 @@ defmodule MmDate do
 
     day = get_day(jdn)
 
-    trunc((day + 1) / 16) + trunc(day / 16) + trunc(day / get_month_length(jdn))
+    (trunc((day + 1) / 16) + trunc(day / 16) + trunc(day / get_month_length(jdn)))
+    |> MoonPhase.new()
   end
 
   @spec get_fornight_day(float) :: 1..15
@@ -293,9 +302,21 @@ defmodule MmDate do
     trunc(day - 15 * trunc(day / 16))
   end
 
-  @spec get_week_day(float) :: 0..6
+  @spec get_week_day(float) :: %MmWeekDay{}
   defp get_week_day(jdn) do
-    (trunc(jdn) + 2) |> rem(7)
+    # (jdn + 2) % 7
+    # elixir only have remainder for only intergers and jdn is float
+    # so we need to find remainder ourself
+
+    # Calculate the truncated quotient
+    dividend = jdn + 2
+    divisor = 7
+    truncated_quotient = Float.floor(dividend / divisor)
+
+    # Calculate the remainder
+    remainder = dividend - truncated_quotient * divisor
+
+    MmWeekDay.new(trunc(remainder))
   end
 
   @spec get_julian_day(non_neg_integer, 1..12, 1..31, :gregorian) :: float()
@@ -387,10 +408,9 @@ defmodule MmDate do
       jdn
       |> get_year()
       |> get_year_type()
-      |> YearType.name()
 
-    total_days = total_days - if year_type == :big_watat, do: day_threshold, else: 0
-    total_days = total_days + if year_type == :common, do: day_threshold * 30, else: 0
+    total_days = total_days - if year_type.name == :big_watat, do: day_threshold, else: 0
+    total_days = total_days + if year_type.name == :common, do: day_threshold * 30, else: 0
 
     trunc((total_days + 29.26) / 29.544)
   end
@@ -405,11 +425,8 @@ defmodule MmDate do
 
     total_days = jdn - get_first_day_of_tagu(year) + 1
 
-    year_length =
-      year
-      |> get_year_type()
-      |> YearType.name()
-      |> get_year_length()
+    year_type = get_year_type(year)
+    year_length = get_year_length(year_type.name)
 
     # တကယ်လို့ နှောင်းလ ဖြစ်ခဲ့ရင် အဲဒီနှစ်အမျိုးအစားရဲ့ ရက်အရေအတွက်ကို ပြန်နုတ်ပေးဖို့ လိုပါတယ်။
     if total_days > year_length, do: total_days - year_length, else: total_days
@@ -434,5 +451,10 @@ defmodule MmDate do
     nearest_watat_info = get_nearnest_watat_info(year)
     year_count = year - nearest_watat_info.year
     nearest_watat_info.second_waso_full_moon_day + 354 * year_count - 102
+  end
+
+  @spec get_sasana_year(pos_integer, pos_integer, pos_integer) :: pos_integer()
+  defp get_sasana_year(year, month, day) do
+    year + if month == 1 or (month == 2 and day < 16), do: 1181, else: 1182
   end
 end

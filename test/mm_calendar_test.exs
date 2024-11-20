@@ -2,7 +2,7 @@ defmodule MmCalendarTest do
   use ExUnit.Case
   doctest MmCalendar
 
-  alias Astro.{DragonHeadDirection, Mahabote, Nakhat}
+  alias MmCalendar.{Astro, MmDate, Thingyan}
 
   setup_all do
     base_file_path = "priv/mmdate/"
@@ -70,9 +70,9 @@ defmodule MmCalendarTest do
 
         assert calculated_year == year
 
-        assert calculated_year_type == year_type
+        assert calculated_year_type.index == year_type
 
-        assert calculated_month == month
+        assert calculated_month.index == month
 
         assert calculated_day == day
       end)
@@ -115,61 +115,61 @@ defmodule MmCalendarTest do
         mahayatkyan,
         shanyat,
         nagahle,
-        mahabote,
-        nakhat,
+        mahabote_index,
+        nakhat_index,
         _yearName
       ] = line |> Enum.map(&String.to_integer/1)
 
       date = MmDate.from_jdn(jd)
-      is_sabbath_eve = MmAstro.is_sabbath_eve?(date)
+      is_sabbath_eve = Astro.is_sabbath_eve?(date)
       assert is_sabbath_eve == (sabbath == 2)
 
-      is_sabbath = MmAstro.is_sabbath?(date)
+      is_sabbath = Astro.is_sabbath?(date)
       assert is_sabbath == (sabbath == 1)
 
-      is_yatyaza = MmAstro.is_yatyaza?(date)
+      is_yatyaza = Astro.is_yatyaza?(date)
       assert is_yatyaza == to_bool(yatyaza)
 
-      is_pyathada = MmAstro.is_pyathada?(date)
+      is_pyathada = Astro.is_pyathada?(date)
       assert is_pyathada == (pyathada == 1)
 
-      head_direction = MmAstro.get_dragon_head_direction(date)
-      assert nagahle == DragonHeadDirection.index(head_direction)
+      head_direction = Astro.get_dragon_head_direction(date)
+      assert nagahle == head_direction.index
 
-      mahabote_index = MmAstro.get_mahabote(date)
-      assert mahabote == Mahabote.index(mahabote_index)
+      mahabote = Astro.get_mahabote(date)
+      assert mahabote_index == mahabote.index
 
-      nakhat_index = MmAstro.get_nakhat(date)
-      assert nakhat == Nakhat.index(nakhat_index)
+      nakhat = Astro.get_nakhat(date)
+      assert nakhat_index == nakhat.index
 
-      is_thama_nyo = MmAstro.is_thama_nyo?(date)
+      is_thama_nyo = Astro.is_thama_nyo?(date)
       assert is_thama_nyo == to_bool(thamanyo)
 
-      is_thama_phyu = MmAstro.is_thama_phyu?(date)
+      is_thama_phyu = Astro.is_thama_phyu?(date)
       assert is_thama_phyu == to_bool(thamaphyu)
 
-      is_amyeittasote = MmAstro.is_amyeittasote?(date)
+      is_amyeittasote = Astro.is_amyeittasote?(date)
       assert is_amyeittasote == to_bool(amyeittasote)
 
-      is_warameittu_gyi = MmAstro.is_warameittu_gyi?(date)
+      is_warameittu_gyi = Astro.is_warameittu_gyi?(date)
       assert is_warameittu_gyi == to_bool(warameittugyi)
 
-      is_warameittu_nge = MmAstro.is_warameittu_nge?(date)
+      is_warameittu_nge = Astro.is_warameittu_nge?(date)
       assert is_warameittu_nge == to_bool(warameittunge)
 
-      is_yat_pote = MmAstro.is_yat_pote?(date)
+      is_yat_pote = Astro.is_yat_pote?(date)
       assert is_yat_pote == to_bool(yatpote)
 
-      is_naga_por = MmAstro.is_naga_por?(date)
+      is_naga_por = Astro.is_naga_por?(date)
       assert is_naga_por == to_bool(nagapor)
 
-      is_yat_yotema = MmAstro.is_yat_yotema?(date)
+      is_yat_yotema = Astro.is_yat_yotema?(date)
       assert is_yat_yotema == to_bool(yatyotema)
 
-      is_maha_yat_kyan = MmAstro.is_maha_yat_kyan?(date)
+      is_maha_yat_kyan = Astro.is_maha_yat_kyan?(date)
       assert is_maha_yat_kyan == to_bool(mahayatkyan)
 
-      is_shan_yat = MmAstro.is_shan_yat?(date)
+      is_shan_yat = Astro.is_shan_yat?(date)
       assert is_shan_yat == to_bool(shanyat)
     end)
   end

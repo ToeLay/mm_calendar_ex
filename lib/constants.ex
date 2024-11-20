@@ -1,4 +1,4 @@
-defmodule Constants do
+defmodule MmCalendar.Constants do
   @doc """
     Beginning of Gregorian calendar in JDN (1752/Sep/14)
   """

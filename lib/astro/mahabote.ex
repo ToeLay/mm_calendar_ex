@@ -1,35 +1,36 @@
-defmodule Astro.Mahabote do
+defmodule MmCalendar.Astro.Mahabote do
+  alias MmCalendar.Language
+  alias MmCalendar.Language.{NameTranslations, Translator}
+
   @mahabote [:binga, :ahtun, :yaza, :adipidi, :marana, :thike, :puti]
 
-  def name(index) do
-    Enum.at(@mahabote, index)
+  defstruct [
+    :index,
+    :name,
+    :translations
+  ]
+
+  def new(index) when is_integer(index) and index >= 0 and index <= 6 do
+    name = Enum.at(@mahabote, index)
+    create(index, name)
   end
 
-  def index(:binga) do
-    0
+  def new(name) when is_atom(name) and name in @mahabote do
+    index = Enum.find_index(@mahabote, fn el_name -> el_name == name end)
+    create(index, name)
   end
 
-  def index(:ahtun) do
-    1
-  end
-
-  def index(:yaza) do
-    2
-  end
-
-  def index(:adipidi) do
-    3
-  end
-
-  def index(:marana) do
-    4
-  end
-
-  def index(:thike) do
-    5
-  end
-
-  def index(:puti) do
-    6
+  defp create(index, name) do
+    %__MODULE__{
+      index: index,
+      name: name,
+      translations: %NameTranslations{
+        english: Translator.translate(name, Language.english()),
+        myanmar: Translator.translate(name, Language.myanmar()),
+        mon: Translator.translate(name, Language.mon()),
+        tai: Translator.translate(name, Language.tai()),
+        karen: Translator.translate(name, Language.karen())
+      }
+    }
   end
 end

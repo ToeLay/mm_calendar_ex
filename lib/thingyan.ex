@@ -1,7 +1,9 @@
-defmodule Thingyan do
+defmodule MmCalendar.Thingyan do
   @doc """
   Myanmar thingyan calculation.
   """
+
+  alias MmCalendar.{Constants, MmDate}
 
   defstruct [:akyo, :akya, :akyat, :atat, :new_year]
 
@@ -18,7 +20,7 @@ defmodule Thingyan do
   @spec for_en_year(pos_integer) :: %__MODULE__{}
   def for_en_year(year) do
     # Thingyan likely falls in April
-    # so check two months ahead
+    # so check one months ahead
     {:ok, date_time} = NaiveDateTime.new(year, 5, 1, 0, 0, 0)
 
     %MmDate{year: year} = MmDate.for(date_time)
@@ -74,7 +76,7 @@ defmodule Thingyan do
     atat_date_time = MmCalendar.julian_date_to_western(thingyan_atat_date_time)
     new_year_date_time = MmCalendar.julian_date_to_western(mm_new_year_day)
 
-    %Thingyan{
+    %__MODULE__{
       akyo: akyo_date_time,
       akya: akya_date_time,
       akyat: akyat_date_times,

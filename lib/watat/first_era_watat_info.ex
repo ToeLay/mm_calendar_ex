@@ -1,7 +1,9 @@
-defmodule Watat.FirstEraWatatInfo do
+defmodule MmCalendar.Watat.FirstEraWatatInfo do
+  alias MmCalendar.Constants
+
   defstruct [:is_watat, :second_waso_full_moon_day, :year]
 
-  @type t :: %Watat.FirstEraWatatInfo{
+  @type t :: %__MODULE__{
           is_watat: boolean(),
           second_waso_full_moon_day: integer(),
           year: integer()
@@ -23,7 +25,7 @@ defmodule Watat.FirstEraWatatInfo do
   }
 
   def new(year) do
-    %Watat.FirstEraWatatInfo{
+    %__MODULE__{
       is_watat: is_watat?(year),
       second_waso_full_moon_day: get_second_waso_full_moon_day(year),
       year: year

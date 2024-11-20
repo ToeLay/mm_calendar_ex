@@ -1,5 +1,5 @@
-defmodule Watat.WatatStrategy do
-  alias Watat.{
+defmodule MmCalendar.Watat.WatatStrategy do
+  alias MmCalendar.Watat.{
     ThirdEraWatatInfo,
     SecondEraWatatInfo,
     FirstEraWatatInfo,
